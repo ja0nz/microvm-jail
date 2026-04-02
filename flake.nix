@@ -49,6 +49,8 @@
       );
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
+      microvmPkg = microvm.packages.${system}.microvm;
+      scripts = import ./scripts { inherit pkgs microvmPkg; };
     in
     {
       nixosConfigurations = vms;
@@ -59,19 +61,26 @@
       formatter.x86_64-linux = pkgs.nixfmt-tree;
 
       devShells.${system}.default = pkgs.mkShell {
-        buildInputs = with pkgs; [
-          mise
-          deadnix
-          pre-commit
-          # LSP Server
-          tombi
-          bash-language-server
-          nixd
-        ];
+        packages =
+          with pkgs;
+          [
+            deadnix
+            prek
+            # LSP Server
+            tombi
+            bash-language-server
+            nixd
+          ]
+          ++ (builtins.attrValues scripts);
         shellHook = ''
-          echo "Mise environment active"
+          echo "commands: ${builtins.concatStringsSep ", " (builtins.attrNames scripts)}"
+          export FLAKE_ROOT="$(git rev-parse --show-toplevel)"
         '';
       };
 
+      apps.${system} = builtins.mapAttrs (name: pkg: {
+        type = "app";
+        program = "${pkg}/bin/${name}";
+      }) scripts;
     };
 }
