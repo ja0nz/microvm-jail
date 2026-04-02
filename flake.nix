@@ -1,8 +1,14 @@
 {
   description = "VM jail for agents and the like";
   nixConfig = {
-    extra-substituters = [ "https://microvm.cachix.org" ];
-    extra-trusted-public-keys = [ "microvm.cachix.org-1:oXnBc6hRE3eX5rSYdRyMYXnfzcCxC7yKPTbZXALsqys=" ];
+    extra-substituters = [
+      "https://microvm.cachix.org"
+      "https://cache.numtide.com"
+    ];
+    extra-trusted-public-keys = [
+      "microvm.cachix.org-1:oXnBc6hRE3eX5rSYdRyMYXnfzcCxC7yKPTbZXALsqys="
+      "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
+    ];
   };
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -10,19 +16,27 @@
       url = "github:microvm-nix/microvm.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    llm-agents.url = "github:numtide/llm-agents.nix";
+    sops-nix.url = "github:Mic92/sops-nix";
+    sops-nix.inputs.nixpkgs.follows = "nixpkgs";
+    preservation.url = "github:nix-community/preservation";
   };
 
   outputs =
-    {
+    inputs@{
       self,
       nixpkgs,
+      sops-nix,
       microvm,
+      preservation,
+      ...
     }:
     let
+      system = "x86_64-linux";
       vmList = [
         {
-          name = "my-jail1";
-          modules = [ ];
+          name = "pi-mono";
+          modules = [ ./modules/pi-mono.nix ];
         }
         # {
         #   name = "my-microvm2";
@@ -34,8 +48,15 @@
         { name, modules }:
         nixpkgs.lib.nixosSystem {
           inherit system;
+          specialArgs = {
+            inherit inputs;
+            inherit system;
+            persistDir = "/persistent";
+          };
           modules = [
             microvm.nixosModules.microvm
+            sops-nix.nixosModules.sops
+            preservation.nixosModules.preservation
             ./modules/base.nix
             { microvm-base = { inherit id name; }; }
           ]
@@ -47,10 +68,8 @@
           value = mkVM id vm;
         }) vmList
       );
-      system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
-      microvmPkg = microvm.packages.${system}.microvm;
-      scripts = import ./scripts { inherit pkgs microvmPkg; };
+      scripts = import ./scripts { inherit pkgs system inputs; };
     in
     {
       nixosConfigurations = vms;
@@ -66,6 +85,7 @@
           [
             deadnix
             prek
+            sops
             # LSP Server
             tombi
             bash-language-server

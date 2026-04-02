@@ -8,7 +8,12 @@
       name = "my-microvm1";
     };
 */
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  persistDir,
+  ...
+}:
 let
   cfg = config.microvm-base;
 
@@ -20,6 +25,9 @@ let
   tapId = "mvm-${toString cfg.id}";
   imgId = "var-${toString cfg.id}.img";
   vsockCid = 3 + cfg.id;
+
+  # Secret mount (check vm-create task in ../scripts/default.nix)
+  secretDir = "/etc/age";
 in
 {
   options.microvm-base = {
@@ -34,7 +42,39 @@ in
   };
 
   config = {
+    # SOPS-NIX
+    fileSystems."${secretDir}".neededForBoot = true;
+    sops = {
+      defaultSopsFormat = "yaml";
+      defaultSopsFile = ../secrets.enc.yaml;
+      age.keyFile = "${secretDir}/keys.txt";
+    };
+
+    # PRESERVATION
+    fileSystems."${persistDir}".neededForBoot = true;
+    preservation = {
+      enable = true;
+      preserveAt."${persistDir}" = {
+        files = [
+          # auto-generated machine ID
+          {
+            file = "/etc/machine-id";
+            inInitrd = true;
+          }
+        ];
+        directories = [
+          "/var/lib/systemd/timers"
+          # NixOS user state
+          "/var/lib/nixos"
+          "/var/log"
+        ];
+      };
+    };
+    systemd.suppressedSystemUnits = [ "systemd-machine-id-commit.service" ];
+
+    # NIX config
     system.stateVersion = "24.05";
+    time.timeZone = "Europe/Berlin";
     networking.hostName = cfg.name;
 
     systemd.network.enable = true;
@@ -57,7 +97,7 @@ in
       mem = 1024;
       volumes = [
         {
-          mountPoint = "/var";
+          mountPoint = persistDir;
           image = imgId;
           size = 256;
         }
@@ -68,6 +108,12 @@ in
           tag = "ro-store";
           source = "/nix/store";
           mountPoint = "/nix/.ro-store";
+        }
+        {
+          proto = "virtiofs";
+          tag = "age-key";
+          source = "age-key";
+          mountPoint = "${secretDir}";
         }
       ];
       interfaces = [

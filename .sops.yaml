@@ -1,0 +1,11 @@
+# .sops.yaml
+keys:
+  - &vm_key age1csq7hlndv3eqxqe9qyaqfuq05zf8fnlj0eqd7msv9mx0jdmpu4fsg3mt53
+  - &ja0nz_key age186szpazmh9k0h2pyeuuzpzs4mdpd4rpucx9df3csaz7f5l6n2e3q8p8xaq
+
+creation_rules:
+  - path_regex: ^secrets\.enc\.yaml$
+    key_groups:
+      - age:
+          - *vm_key
+          - *ja0nz_key
