@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Check: resolvectl query <vm-name>.mvm
 set -euo pipefail
 NAME="${1:?Usage: ssh-connect <vm-name>}"
 DOMAIN="mvm"
