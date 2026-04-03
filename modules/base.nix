@@ -55,13 +55,6 @@ in
     preservation = {
       enable = true;
       preserveAt."${persistDir}" = {
-        files = [
-          # auto-generated machine ID
-          {
-            file = "/etc/machine-id";
-            inInitrd = true;
-          }
-        ];
         directories = [
           "/var/lib/systemd/timers"
           # NixOS user state
@@ -70,7 +63,6 @@ in
         ];
       };
     };
-    systemd.suppressedSystemUnits = [ "systemd-machine-id-commit.service" ];
 
     # NIX config
     system.stateVersion = "24.05";
@@ -78,6 +70,7 @@ in
     networking.hostName = cfg.name;
 
     systemd.network.enable = true;
+    boot.kernelParams = [ "systemd.machine_id=${builtins.hashString "md5" cfg.name}" ];
     users.users.root.password = "";
     users.users.root.openssh.authorizedKeys.keys = [
       (builtins.readFile ../ident.pub)

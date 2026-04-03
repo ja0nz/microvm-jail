@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
+NAME="${1:?Usage: ssh-connect <vm-name>}"
+DOMAIN="mvm"
 
-BRIDGE="${1:-microbr}"
-
-# Write private key to a temp file and clean up on exit
 keyfile=$(mktemp)
 trap 'rm -f "$keyfile"' EXIT
 chmod 600 "$keyfile"
@@ -17,30 +16,11 @@ AAAEBWUwHXyBr53W6e724iiNT8ZacvbbtTGF2EoP7W/PTiXAST3+ESExW0i58+ItQpddE+
 -----END OPENSSH PRIVATE KEY-----
 EOF
 
-mapfile -t leases < <(
-  networkctl status "$BRIDGE" 2>/dev/null \
-    | grep -oP '\d+\.\d+\.\d+\.\d+(?= \(to)'
-)
-
-if [[ ${#leases[@]} -eq 0 ]]; then
-  echo "No DHCP leases found on $BRIDGE" >&2
-  exit 1
-fi
-
-if [[ ${#leases[@]} -eq 1 ]]; then
-  ip="${leases[0]}"
-else
-  echo "Multiple leases on $BRIDGE:"
-  select ip in "${leases[@]}"; do
-    [[ -n "$ip" ]] && break
-  done
-fi
-
-echo "Connecting to $ip..."
+echo "Connecting to ${NAME}.${DOMAIN}..."
 exec ssh \
   -i "$keyfile" \
   -o IdentitiesOnly=yes \
   -o StrictHostKeyChecking=no \
   -o UserKnownHostsFile=/dev/null \
   -o LogLevel=ERROR \
-  root@"$ip"
+  root@"${NAME}.${DOMAIN}"
