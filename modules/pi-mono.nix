@@ -12,16 +12,18 @@
 let
   agents = inputs.llm-agents.packages.${system};
   dataDir = "/var/pi";
+  authConfig = {
+    openrouter = {
+      type = "api_key";
+      key = config.sops.placeholder."openrouter_api_key";
+    };
+  };
 in
 {
   # SOPS-NIX
   sops.secrets."openrouter_api_key" = { };
   sops.templates."agent-auth.json" = {
-    content = ''
-      {
-        "openrouter": { "type": "api_key", "key": "${config.sops.placeholder."openrouter_api_key"}" }
-      }
-    '';
+    content = builtins.toJSON authConfig;
     mode = "0600";
     path = "${persistDir}${dataDir}/auth.json";
   };

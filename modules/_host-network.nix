@@ -66,5 +66,8 @@ in
     };
   };
 
-  networking.firewall.interfaces."${bridge}".allowedUDPPorts = [ 53 67 ];
+  networking.firewall.interfaces."${bridge}".allowedUDPPorts = [
+    53
+    67
+  ];
 }
