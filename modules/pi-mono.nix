@@ -18,6 +18,13 @@ let
       key = config.sops.placeholder."openrouter_api_key";
     };
   };
+
+  cavemanSkills = [
+    "caveman"
+    "caveman-commit"
+    "caveman-review"
+    "compress"
+  ];
 in
 {
   # SOPS-NIX
@@ -40,16 +47,27 @@ in
     variables = {
       PI_CODING_AGENT_DIR = dataDir;
     };
+    # Map caveman skills to etc/pi/skills
+    etc = builtins.listToAttrs (
+      map (name: {
+        name = "pi/skills/${name}";
+        value.source = "${inputs.caveman}/skills/${name}";
+      }) cavemanSkills
+    );
   };
+  # Symlink etc -> var
+  systemd.tmpfiles.rules = map (
+    name: "L ${dataDir}/skills/${name} - - - - /etc/pi/skills/${name}"
+  ) cavemanSkills;
 
   microvm = {
     # ln -s manually some shared directories to operate on
     shares = [
       {
         proto = "virtiofs";
-        tag = "pitest";
-        source = "pitest";
-        mountPoint = "/mnt/pitest";
+        tag = "shares";
+        source = "shares";
+        mountPoint = "/root/shares";
       }
     ];
   };

@@ -83,6 +83,11 @@ in
       };
     };
 
+    environment.shellAliases = {
+      sd = "sudo shutdown now";
+      root = "sudo -s";
+      ".." = "cd ..";
+    };
     microvm = {
       hypervisor = "qemu";
       socket = "control.socket";
@@ -101,12 +106,14 @@ in
           tag = "ro-store";
           source = "/nix/store";
           mountPoint = "/nix/.ro-store";
+          readOnly = true;
         }
         {
           proto = "virtiofs";
           tag = "age-key";
           source = "age-key";
           mountPoint = "${secretDir}";
+          readOnly = true;
         }
       ];
       interfaces = [
