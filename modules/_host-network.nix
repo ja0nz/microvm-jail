@@ -1,6 +1,6 @@
 /*
   #+TITLE: MicroVM host configuration
-  THIS SHOULD BE PART OF YOUR HOST CONFIGURATION
+  OPTIONAL host network configuration
   * Guest VM config
   microvm.interfaces = [{
     type = "tap";

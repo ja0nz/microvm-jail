@@ -26,15 +26,15 @@ This flake chooses microvm.nix because it gives you the strongest isolation whil
 
 1. **Enable flakes** if you haven't already.
 2. **Clone this repository** and `cd` into it.
-3. **Add the host network configuration** (see below) to your host NixOS configuration.
+3. **Add the host network configuration (optional)** (see below) to your host NixOS configuration.
 4. **Create a secrets file** (optional, only needed if you want to use SOPS).
 5. **Run `nix shell`** to enter a development shell with all management scripts.
 6. **Create a VM** with `vm-create <name>`.
 7. **Connect via SSH** with `ssh-connect <name>`.
 
-## Host Network Configuration
+## Host Network Configuration (Optional)
 
-The file `modules/_host-network.nix` must be imported into your **host** NixOS configuration.
+The file `modules/_host-network.nix` can be imported into your **host** NixOS configuration (optional). If you skip this configuration, you will need to manually configure networking for each VM's tap interface (e.g., `mvm-<id>`).
 It sets up:
 - A bridge `microbr` with address `192.168.83.1/24`.
 - DHCP and DNS server (dnsmasq) for the `.mvm` domain.
@@ -42,6 +42,10 @@ It sets up:
 - Automatic attachment of any tap interface whose name starts with `mvm-`.
 
 If you need a different subnet or domain, you can modify the variables at the top of `modules/_host-network.nix`.
+
+### Without host network configuration
+
+If you choose not to import this module, you will need to manually configure networking for each VM's tap interface (e.g., `mvm-<id>`). This may involve attaching the tap interface to a bridge, configuring IP addressing, and setting up DNS and DHCP manually.
 
 ### How to import
 
