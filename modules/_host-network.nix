@@ -66,6 +66,7 @@ in
     };
   };
 
+  # Taken from https://wiki.nixos.org/wiki/Networking#Virtualization
   networking.firewall.interfaces."${bridge}".allowedUDPPorts = [
     53
     67
