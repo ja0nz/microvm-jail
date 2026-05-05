@@ -68,6 +68,13 @@ in
     system.stateVersion = "24.05";
     time.timeZone = "Europe/Berlin";
     networking.hostName = cfg.name;
+    nix = {
+      nixPath = [ ];
+      settings.experimental-features = [
+        "nix-command"
+        "flakes"
+      ];
+    };
 
     systemd.network.enable = true;
     boot.kernelParams = [ "systemd.machine_id=${builtins.hashString "md5" cfg.name}" ];
@@ -83,16 +90,23 @@ in
       };
     };
 
-    environment.shellAliases = {
-      sd = "sudo shutdown now";
-      root = "sudo -s";
-      ".." = "cd ..";
+    environment = {
+      # systemPackages = with pkgs; [
+      #   comma
+      # ];
+      shellAliases = {
+        sd = "sudo shutdown now";
+        root = "sudo -s";
+        ".." = "cd ..";
+      };
     };
     microvm = {
       hypervisor = "qemu";
       socket = "control.socket";
       vcpu = 2;
       mem = 1024;
+      # For comma
+      writableStoreOverlay = "/nix/.rw-store";
       volumes = [
         {
           mountPoint = persistDir;

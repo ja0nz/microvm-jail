@@ -5,19 +5,21 @@
 */
 {
   inputs,
+  homeDir,
   ...
 }:
 let
-  dataDir = "/root/.agents";
-  cavemanSkills = [
-    "caveman"
-    "caveman-commit"
-    "caveman-review"
-    "compress"
+  srcDir = inputs.juliusbrussee-caveman;
+  targetDir = "${homeDir}/.agents";
+  skills = [
+    "caveman" # lite | full (default) | ultra
+    "caveman-commit" # Ultra-compressed commit message generator
+    "caveman-review" # Ultra-compressed code review comments
+    "compress" # Compress project memory files (CLAUDE.md, etc.)
   ];
 in
 {
   systemd.tmpfiles.rules = map (
-    name: "L+ ${dataDir}/skills/${name} - - - - ${inputs.caveman}/skills/${name}"
-  ) cavemanSkills;
+    name: "L+ ${targetDir}/skills/${name} - - - - ${srcDir}/skills/${name}"
+  ) skills;
 }

@@ -20,9 +20,27 @@
     sops-nix.url = "github:Mic92/sops-nix";
     sops-nix.inputs.nixpkgs.follows = "nixpkgs";
     preservation.url = "github:nix-community/preservation";
+    nix-index-database.url = "github:nix-community/nix-index-database";
+    nix-index-database.inputs.nixpkgs.follows = "nixpkgs";
     # Non flakes
-    caveman = {
+    juliusbrussee-caveman = {
       url = "github:JuliusBrussee/caveman";
+      flake = false;
+    };
+    resumx-skills = {
+      url = "github:resumx/skills";
+      flake = false;
+    };
+    paramchoudhary-resumeSkills = {
+      url = "github:Paramchoudhary/ResumeSkills";
+      flake = false;
+    };
+    rendercv-rendercvSkill = {
+      url = "github:rendercv/rendercv-skill";
+      flake = false;
+    };
+    addyosmani-agentSkills = {
+      url = "github:addyosmani/agent-skills";
       flake = false;
     };
   };
@@ -34,19 +52,20 @@
       sops-nix,
       microvm,
       preservation,
+      nix-index-database,
       ...
     }:
     let
       system = "x86_64-linux";
       vmList = [
         {
-          name = "pi-mono";
-          modules = [ ./modules/pi-mono.nix ];
+          name = "alpha";
+          modules = [ ./modules/vms/alpha.nix ];
         }
-        # {
-        #   name = "my-microvm2";
-        #   modules = [ ./modules/extra.nix ];
-        # }
+        {
+          name = "beta";
+          modules = [ ./modules/vms/beta.nix ];
+        }
       ];
       mkVM =
         id:
@@ -57,11 +76,14 @@
             inherit inputs;
             inherit system;
             persistDir = "/persistent";
+            homeDir = "/root";
           };
           modules = [
             microvm.nixosModules.microvm
             sops-nix.nixosModules.sops
             preservation.nixosModules.preservation
+            nix-index-database.nixosModules.default
+            { programs.nix-index-database.comma.enable = true; }
             ./modules/base.nix
             { microvm-base = { inherit id name; }; }
           ]

@@ -4,15 +4,16 @@
 */
 {
   pkgs,
+  homeDir,
   ...
 }:
 let
-  dataDir = "/root/.pi";
+  dataDir = "${homeDir}/.pi";
   ext = "inherit-ownership.ts";
-  inheritOwnership = pkgs.writeText ext (builtins.readFile ./inherit-ownership.ts);
+  exe = pkgs.writeText ext (builtins.readFile ./inherit-ownership_v1.ts);
 in
 {
   systemd.tmpfiles.rules = [
-    "L+ ${dataDir}/extensions/${ext} - - - - ${inheritOwnership}"
+    "L+ ${dataDir}/extensions/${ext} - - - - ${exe}"
   ];
 }
